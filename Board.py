@@ -2,25 +2,12 @@ from const import *
 from Figure import *
 
 
-# расстановка фигур
 class Board:
     def __init__(self):
         self.color = WHITE
-        self.field = []
-        for row in range(8):
-            self.field.append([None] * 8)
-        for i in range(8):
-            self.field[1][i] = Pawn(1, i, WHITE)
-            self.field[6][i] = Pawn(6, i, BLACK)
-        for i in [(0, WHITE), (7, BLACK)]:
-            self.field[i[0]][0] = Rook(i[0], 0, i[1])
-            self.field[i[0]][1] = Knight(i[0], 1, i[1])
-            self.field[i[0]][2] = Bishop(i[0], 2, i[1])
-            self.field[i[0]][3] = Queen(i[0], 3, i[1])
-            self.field[i[0]][4] = King(i[0], 4, i[1])
-            self.field[i[0]][5] = Bishop(i[0], 5, i[1])
-            self.field[i[0]][6] = Knight(i[0], 6, i[1])
-            self.field[i[0]][7] = Rook(i[0], 7, i[1])
+        self.field = [[None] * 8 for _ in range(8)]
+        self.arrange_pawns()
+        self.arrange_senior_figures()
 
     def __repr__(self):
         stra = '     +----+----+----+----+----+----+----+----+ \n'
@@ -32,6 +19,22 @@ class Board:
         stra += '        ' + '    '.join([str(col) for col in range(8)])
 
         return stra
+
+    def arrange_pawns(self):
+        for i in range(8):
+            self.field[1][i] = Pawn(1, i, WHITE)
+            self.field[6][i] = Pawn(6, i, BLACK)
+
+    def arrange_senior_figures(self):
+        for i in [(0, WHITE), (7, BLACK)]:
+            self.field[i[0]][0] = Rook(i[0], 0, i[1])
+            self.field[i[0]][1] = Knight(i[0], 1, i[1])
+            self.field[i[0]][2] = Bishop(i[0], 2, i[1])
+            self.field[i[0]][3] = Queen(i[0], 3, i[1])
+            self.field[i[0]][4] = King(i[0], 4, i[1])
+            self.field[i[0]][5] = Bishop(i[0], 5, i[1])
+            self.field[i[0]][6] = Knight(i[0], 6, i[1])
+            self.field[i[0]][7] = Rook(i[0], 7, i[1])
 
     @staticmethod
     def correct_coordinates(row, col) -> bool:
@@ -46,42 +49,53 @@ class Board:
         col1 = ord(new_cor[0]) - ord('a')
         row = int(cor[1]) - 1
         row1 = int(new_cor[1]) - 1
-        return row, col, row1, col1
+        return (row, col), (row1, col1)
 
     def make_move(self, stra: str):
-        return self.move_piece(*self.convert_chess_math(stra.replace(' ', '')))
-
-    def move_piece(self, row, col, row1, col1):
         """Переместить фигуру из точки (row, col) в точку (row1, col1).
         Если перемещение возможно, метод выполнит его и вернет True.
         Если нет --- вернет False"""
-        print([row, col, row1, col1])
-        # проверка на не вылезают ли за пределы доски
-        if not self.correct_coordinates(row, col) or not self.correct_coordinates(row1, col1):
-            return False
-        # нельзя пойти в ту же клетку
-        if row == row1 and col == col1:
-            return False
-        piece = self.field[row][col]
-        if piece is None:
-            return False
-        if piece.get_color() != self.color:
-            return False
-        if not piece.can_move(self.field, row1, col1):
+        cor, new_cor = self.convert_chess_math(stra.replace(' ', ''))
+        if not self.check_cords(cor, new_cor):
             return False
 
+        piece = self.field[cor[0]][cor[1]]
+        if not self.check_move_piece(piece, new_cor):
+            return False
+        self.move_piece(piece, *cor, *new_cor)
+
+        return True
+
+    def check_cords(self, cor, new_cor):
+        if cor == new_cor:
+            return False
+        if not self.correct_coordinates(*cor):
+            return False
+        if not self.correct_coordinates(*new_cor):
+            return False
+        return True
+
+    def check_move_piece(self, piece, new_cor):
+        if piece is None:
+            return False
+        if not self.is_current_player(piece.get_color()):
+            return False
+        if not piece.can_move(self.field, *new_cor):
+            return False
+        return True
+
+    def move_piece(self, piece, row, col, row1, col1):
         self.field[row][col] = None
         self.field[row1][col1] = piece
         piece.set_position(row1, col1)
         self.color = not self.color
-        return True
 
     def is_under_attack(self, row, col, color):
         for i in range(len(self.field)):
             for j in range(len(self.field[0])):
                 if self.field[i][j] is not None:
                     if self.field[i][j].color == color:
-                        if self.field[i][j].can_move(row, col):
+                        if self.field[i][j].can_move(self.field, row, col):
                             return True
 
     def is_current_player(self, other_color):
@@ -94,29 +108,5 @@ class Board:
         piece = self.field[row][col]
         if piece is None:
             return '  '
-        color = piece.get_color()
-        c = 'w' if color == WHITE else 'b'
+        c = 'w' if piece.get_color() == WHITE else 'b'
         return c + piece.char()
-
-
-def can_xod_Bishop(sp_troektoriy, row, row1):
-    ogr_s_niz = max([*[k for k, i in enumerate(sp_troektoriy[:row])
-                       if type(i) != Bishop and i is not None], -1])
-    # только и только потому что нули у списака и матрицы cовпадают
-    ogr_s_verh = min([*[k for k, i in enumerate(sp_troektoriy[row:])
-                        if type(i) != Bishop and i is not None], len(sp_troektoriy) + 1])
-    if not ogr_s_niz < row1 < ogr_s_verh:
-        return False
-    return True
-
-
-def can_xod_Queen(sp_troektoriy, row, row1):
-    ogr_s_niz = max([*[k for k, i in enumerate(sp_troektoriy[:row])
-                       if type(i) != Queen and i is not None], -1])
-    # только и только потому что нули у списака и матрицы cовпадают
-    ogr_s_verh = min(
-        [*[k for k, i in enumerate(sp_troektoriy[row:])
-           if type(i) != Queen and i is not None], len(sp_troektoriy) + 1])
-    if not ogr_s_niz < row1 < ogr_s_verh:
-        return False
-    return True
