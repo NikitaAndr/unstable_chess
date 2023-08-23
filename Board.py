@@ -24,27 +24,70 @@ class Board:
 
     def __repr__(self):
         stra = '     +----+----+----+----+----+----+----+----+ \n'
-
         for row in range(7, -1, -1):  # возможно списочное выражение
             stra += f'  {row}  '
             for col in range(8):
-                stra += f'| {self.cell(row, col)} '
+                stra += f'| {self.get_cell(row, col)} '
             stra += '|\n     +----+----+----+----+----+----+----+----+ \n'
-
         stra += '        ' + '    '.join([str(col) for col in range(8)])
 
         return stra
 
     @staticmethod
-    def correct_coordinates(row, col):
+    def correct_coordinates(row, col) -> bool:
         """Функция проверяет, что координаты (row, col) лежат
         внутри доски"""
         return 0 <= row < 8 and 0 <= col < 8
 
-    def current_player_color(self):
-        return self.color
+    @staticmethod
+    def convert_chess_math(stra: str):
+        cor, new_cor = stra.split('-')
+        col = ord(cor[0]) - ord('a')
+        col1 = ord(new_cor[0]) - ord('a')
+        row = int(cor[1]) - 1
+        row1 = int(new_cor[1]) - 1
+        return row, col, row1, col1
 
-    def cell(self, row, col):
+    def make_move(self, stra: str):
+        return self.move_piece(*self.convert_chess_math(stra.replace(' ', '')))
+
+    def move_piece(self, row, col, row1, col1):
+        """Переместить фигуру из точки (row, col) в точку (row1, col1).
+        Если перемещение возможно, метод выполнит его и вернет True.
+        Если нет --- вернет False"""
+        print([row, col, row1, col1])
+        # проверка на не вылезают ли за пределы доски
+        if not self.correct_coordinates(row, col) or not self.correct_coordinates(row1, col1):
+            return False
+        # нельзя пойти в ту же клетку
+        if row == row1 and col == col1:
+            return False
+        piece = self.field[row][col]
+        if piece is None:
+            return False
+        if piece.get_color() != self.color:
+            return False
+        if not piece.can_move(self.field, row1, col1):
+            return False
+
+        self.field[row][col] = None
+        self.field[row1][col1] = piece
+        piece.set_position(row1, col1)
+        self.color = not self.color
+        return True
+
+    def is_under_attack(self, row, col, color):
+        for i in range(len(self.field)):
+            for j in range(len(self.field[0])):
+                if self.field[i][j] is not None:
+                    if self.field[i][j].color == color:
+                        if self.field[i][j].can_move(row, col):
+                            return True
+
+    def is_current_player(self, other_color):
+        return self.color == other_color
+
+    def get_cell(self, row, col):
         """Возвращает строку из двух символов. Если в клетке (row, col)
         находится фигура, символы цвета и фигуры. Если клетка пуста,
         то два пробела."""
@@ -54,114 +97,6 @@ class Board:
         color = piece.get_color()
         c = 'w' if color == WHITE else 'b'
         return c + piece.char()
-
-    def move_piece(self, row, col, row1, col1):
-        """Переместить фигуру из точки (row, col) в точку (row1, col1).
-        Если перемещение возможно, метод выполнит его и вернет True.
-        Если нет --- вернет False"""
-
-        if not self.correct_coordinates(row, col) or not self.correct_coordinates(row1, col1):
-            return False
-        # проверка на не вылезают ли за пределы доски
-        if row == row1 and col == col1:
-            return False
-        # нельзя пойти в ту же клетку
-        piece = self.field[row][col]
-        if piece is None:
-            return False
-        # тут ничего нет
-        if piece.get_color() != self.color:
-            return False
-        # куда без очереди ходишь
-        if not piece.can_move(row1, col1):
-            return False
-        # # спрашиваем у фигуры может ли она походить
-        # # я писал
-        # # if [None] * 7 not in self.field[row]:
-        # #     q = [k for i in enumerate(field[row][:self.col]) if type(i) != Rook or i != [None]]
-        # if type(piece) == Rook:
-        #     if [None] * 7 not in self.field[row]:
-        #         ogr_s_leva = max([*[k for k, i in enumerate(self.field[row][:col])
-        #                             if type(i) != Rook or i != [None]], -1])
-        #         ogr_s_prava = min(
-        #             [*[k + 1 for k, i in enumerate(self.field[row][col + 1:])
-        #                if type(i) != Rook or i != [None]], 9])
-        #         if not ogr_s_leva <= col1 <= ogr_s_prava:
-        #             return False
-        #     sp_vertik = [self.field[i][0] for i in range(8)]
-        #     if [None] * 7 not in sp_vertik:
-        #         ogr_s_verx = min(
-        #             [*[k + 1 for k, i in enumerate(sp_vertik[row + 1:])
-        #                if type(i) != Rook or i != [None]], 9])
-        #         ogr_s_niz = max([*[k for k, i in enumerate(sp_vertik[:row])
-        #                            if type(i) != Rook or i != [None]], -1])
-        #         if not ogr_s_niz <= row1 <= ogr_s_verx:
-        #             return False
-        # if type(piece) == Bishop:
-        #     sp_vertik = []
-        #     sp_vertik1 = []
-        #     for i in range(8):
-        #         for j in range(8):
-        #             if piece.col - piece.row == j - i:
-        #                 sp_vertik.append(self.field[i][j])
-        #             if piece.col + piece.row == j + i:
-        #                 sp_vertik1.append(self.field[i][j])
-        #     if piece.col - piece.row == col1 - row1:
-        #         if not can_xod_Bishop(sp_vertik, row, row1):
-        #             return False
-        #     if piece.col + piece.row == col1 + row1:
-        #         if not can_xod_Bishop(sp_vertik1, row, row1):
-        #             return False
-        # if type(piece) == Queen:
-        #     if [None] * 7 not in self.field[row]:
-        #         ogr_s_leva = max(
-        #             [*[k for k, i in enumerate(self.field[row][:col])
-        #                if type(i) != Queen or i != [None]], -1])
-        #         ogr_s_prava = min(
-        #             [*[k + 1 for k, i in enumerate(self.field[row][col + 1:])
-        #                if type(i) != Queen or i != [None]], 9])
-        #         if not ogr_s_leva <= col1 <= ogr_s_prava:
-        #             return False
-        #     sp_vertik = [self.field[i][0] for i in range(8)]
-        #     if [None] * 7 not in sp_vertik:
-        #         ogr_s_verx = min(
-        #             [*[k + 1 for k, i in enumerate(sp_vertik[row + 1:])
-        #                if type(i) != Queen or i != [None]], 9])
-        #         ogr_s_niz = max([*[k for k, i in enumerate(sp_vertik[:row])
-        #                            if type(i) != Queen or i != [None]], -1])
-        #         if not ogr_s_niz <= row1 <= ogr_s_verx:
-        #             return False
-        #     sp_vertik = []
-        #     sp_vertik1 = []
-        #     for i in range(8):
-        #         for j in range(8):
-        #             if piece.col - piece.row == j - i:
-        #                 sp_vertik.append(self.field[i][j])
-        #             if piece.col + piece.row == j + i:
-        #                 sp_vertik1.append(self.field[i][j])
-        #     if piece.col - piece.row == col1 - row1:
-        #         if not can_xod_Bishop(sp_vertik, row, row1):
-        #             return False
-        #     if piece.col + piece.row == col1 + row1:
-        #         if not can_xod_Bishop(sp_vertik1, row, row1):
-        #             return False
-        # if type(piece) == King:
-        #     if self.field[row1][col1] != [None]:
-        #         return False
-
-        self.field[row][col] = None  # Снять фигуру.
-        self.field[row1][col1] = piece  # Поставить на новое место.
-        piece.set_position(row1, col1)
-        self.color = not self.color
-        return True
-
-    def is_under_attack(self, row, col, color):
-        for i in range(len(self.field)):
-            for j in range(len(self.field[0])):
-                if not self.field[i][j] is None:
-                    if self.field[i][j].color == color:
-                        if self.field[i][j].can_move(row, col):
-                            return True
 
 
 def can_xod_Bishop(sp_troektoriy, row, row1):
