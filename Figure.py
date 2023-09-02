@@ -1,3 +1,8 @@
+import pygame.transform
+
+from const import *
+
+
 class Figure:
     def __init__(self, row, col, color):
         self.row = row
@@ -20,6 +25,17 @@ class Figure:
         return True
 
     def char(self): ...
+
+    @staticmethod
+    def get_pos_img_in_sp():
+        return 1
+
+    def get_img(self):
+        return pygame.transform.scale(load_image(f'img.png').
+                                      subsurface(200 * (self.get_pos_img_in_sp() - 1),
+                                                 200 * self.color,
+                                                 200, 200),
+                                      (cell_size, cell_size))
 
 
 class Pawn(Figure):
@@ -50,6 +66,10 @@ class Pawn(Figure):
     def char(self):
         return 'P'
 
+    @staticmethod
+    def get_pos_img_in_sp():
+        return 6
+
 
 class Knight(Figure):
     # пока не трогаю, но можно сделать через модуль от разницы прошлой и настоящей координаты
@@ -68,6 +88,10 @@ class Knight(Figure):
     def char(self):
         return 'N'
 
+    @staticmethod
+    def get_pos_img_in_sp():
+        return 4
+
 
 class Bishop(Figure):
     def can_move(self, board, new_row, new_col):
@@ -82,7 +106,8 @@ class Bishop(Figure):
         direction_row = 1 if new_row - self.row > 0 else -1
         direction_col = 1 if new_col - self.col > 0 else -1
         direction_col *= 1 if is_primary_diagonal else -1
-        for i in range(1, abs(self.row - new_row) - 1):  # полная версия: max(abs(self.row - new_row), abs(self.col - new_col))
+        for i in range(1,
+                       abs(self.row - new_row) - 1):  # полная версия: max(abs(self.row - new_row), abs(self.col - new_col))
             checked_cor = board[self.row + i * direction_row][self.col + i * direction_col]
             if checked_cor is not None:
                 return False
@@ -90,6 +115,10 @@ class Bishop(Figure):
 
     def char(self):
         return 'B'
+
+    @staticmethod
+    def get_pos_img_in_sp():
+        return 3
 
 
 class Rook(Knight):
@@ -118,6 +147,10 @@ class Rook(Knight):
     def char(self):
         return 'R'
 
+    @staticmethod
+    def get_pos_img_in_sp():
+        return 5
+
 
 class Queen(Bishop, Rook):
     def can_move(self, board, new_row, new_col):
@@ -125,6 +158,10 @@ class Queen(Bishop, Rook):
 
     def char(self):
         return 'Q'
+
+    @staticmethod
+    def get_pos_img_in_sp():
+        return 2
 
 
 class King(Figure):
@@ -134,3 +171,7 @@ class King(Figure):
 
     def char(self):
         return 'K'
+
+    @staticmethod
+    def get_pos_img_in_sp():
+        return 1

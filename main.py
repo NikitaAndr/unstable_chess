@@ -1,8 +1,8 @@
-from Game import Game
+from Game import VisualGame
 
 
 def main():
-    Game().start()
+    VisualGame().start()
 
 
 if __name__ == '__main__':

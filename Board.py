@@ -5,6 +5,8 @@ from Figure import *
 class Board:
     def __init__(self):
         self.color = WHITE
+        self.mate = False
+
         self.field = [[None] * 8 for _ in range(8)]
         self.arrange_pawns()
         self.arrange_senior_figures()
@@ -52,18 +54,14 @@ class Board:
         return (row, col), (row1, col1)
 
     def make_move(self, stra: str):
-        """Переместить фигуру из точки (row, col) в точку (row1, col1).
-        Если перемещение возможно, метод выполнит его и вернет True.
-        Если нет --- вернет False"""
         cor, new_cor = self.convert_chess_math(stra.replace(' ', ''))
         if not self.check_cords(cor, new_cor):
             return False
-
-        piece = self.field[cor[0]][cor[1]]
-        if not self.check_move_piece(piece, new_cor):
+        if not self.check_move_piece(
+                piece := self.field[cor[0]][cor[1]], new_cor):
             return False
-        self.move_piece(piece, *cor, *new_cor)
 
+        self.move_piece(piece, *cor, *new_cor)
         return True
 
     def check_cords(self, cor, new_cor):
