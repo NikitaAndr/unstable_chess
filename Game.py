@@ -1,3 +1,4 @@
+import convert
 from Board import Board
 from const import *
 import pygame
@@ -48,24 +49,43 @@ class VisualGame(Game):
     def __init__(self):
         super(VisualGame, self).__init__()
         self.screen = pygame.display.set_mode(size)
-        self.left = 0
-        self.top = 0
-        self.cell_size = 100
+
+        self.selected_square = (-1, -1)
 
     def start(self):
         running = True
         while (not self.board.mate) and running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
+            running = self.event_handling()
             self.render()
             pygame.display.flip()
             clock.tick(FPS)
 
+    def event_handling(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                pos = convert.visual_chess(pygame.mouse.get_pos())
+                if self.selected_square == (-1, -1):
+                    self.selected_square = pos
+                elif not self.board.make_move((self.selected_square, pos)):
+                    self.selected_square = (-1, -1)
+
+        return True
+
     def render(self):
         for i in range(8):
             for j in range(8):
-                if self.board.field[i][j] is not None:
-                    self.screen.blit(self.board.field[i][j].get_img(),
-                                     (self.left + self.cell_size * j,
-                                      self.top + self.cell_size * i))
+                self.draw_square(i, j)
+                self.draw_figure(i, j)
+
+    def draw_square(self, i, j):
+        color = [200, 200, 200] if (i % 2 == j % 2) else [100, 100, 100]
+        if self.selected_square == convert.little_visual_chess((i, j)):
+            color[2] += 50
+        self.screen.fill(color, (*convert.little_visual_visual((i, j)), 200, 200))
+
+    def draw_figure(self, i, j):
+        cor = convert.little_visual_chess((i, j))
+        if (figure := self.board.field[cor[0]][cor[1]]) is not None:  # сделать обращение по индексу к доске
+            self.screen.blit(figure.get_img(), convert.little_visual_visual((i, j)))

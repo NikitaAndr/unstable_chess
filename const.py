@@ -24,6 +24,8 @@ BLACK = 0
 
 size = width, height = 800, 800
 cell_size = 100
+left = 0
+top = 0
 
 FPS = 50
 clock = pygame.time.Clock()

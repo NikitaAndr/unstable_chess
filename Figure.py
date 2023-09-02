@@ -4,7 +4,7 @@ from const import *
 
 
 class Figure:
-    def __init__(self, row, col, color):
+    def __init__(self, row, col, color: bool):
         self.row = row
         self.col = col
         self.color = color
@@ -33,7 +33,7 @@ class Figure:
     def get_img(self):
         return pygame.transform.scale(load_image(f'img.png').
                                       subsurface(200 * (self.get_pos_img_in_sp() - 1),
-                                                 200 * self.color,
+                                                 200 * int(not self.color),
                                                  200, 200),
                                       (cell_size, cell_size))
 

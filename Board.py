@@ -1,5 +1,6 @@
 from const import *
 from Figure import *
+import convert
 
 
 class Board:
@@ -21,6 +22,11 @@ class Board:
         stra += '        ' + '    '.join([str(col) for col in range(8)])
 
         return stra
+
+    def backstage_print(self):
+        for i in range(8):
+            for j in range(8):
+                print(self.field[i][j])
 
     def arrange_pawns(self):
         for i in range(8):
@@ -44,17 +50,8 @@ class Board:
         внутри доски"""
         return 0 <= row < 8 and 0 <= col < 8
 
-    @staticmethod
-    def convert_chess_math(stra: str):
-        cor, new_cor = stra.split('-')
-        col = ord(cor[0]) - ord('a')
-        col1 = ord(new_cor[0]) - ord('a')
-        row = int(cor[1]) - 1
-        row1 = int(new_cor[1]) - 1
-        return (row, col), (row1, col1)
-
-    def make_move(self, stra: str):
-        cor, new_cor = self.convert_chess_math(stra.replace(' ', ''))
+    def make_move(self, stra: str | tuple | list):
+        cor, new_cor = convert.chess_math(stra) if (type(stra) is str) else stra
         if not self.check_cords(cor, new_cor):
             return False
         if not self.check_move_piece(
