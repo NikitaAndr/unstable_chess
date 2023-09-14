@@ -8,11 +8,11 @@ class Game:
     def __init__(self):
         self.board = Board()
         # Итальянка
-        self.board.make_move('e2 - e4')
-        self.board.make_move('e7 - e5')
-        self.board.make_move('g1 - f3')
-        self.board.make_move('b8 - c6')
-        self.board.make_move('f1 - b5')
+        # self.board.make_move('e2 - e4')
+        # self.board.make_move('e7 - e5')
+        # self.board.make_move('g1 - f3')
+        # self.board.make_move('b8 - c6')
+        # self.board.make_move('f1 - b5')
 
     def start(self): ...
 

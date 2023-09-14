@@ -17,14 +17,21 @@ class Figure:
         return self.color
 
     def can_move(self, board, new_row, new_col):
-        if board[new_row][new_col] is not None:
+        if not(0 <= new_row <= 7 and 0 <= new_col <= 7):
             return False
+        move_place = board[new_row][new_col]
+        if move_place is None:
+            return True
+        if move_place.get_color() != self.get_color():
+            return True
+        return False
 
     @staticmethod
     def check_path_empty(self, board, new_row, new_col):
         return True
 
-    def char(self): ...
+    def char(self):
+        ...
 
     @staticmethod
     def get_pos_img_in_sp():
@@ -45,23 +52,30 @@ class Pawn(Figure):
         self.direction = 1 if self.color else -1
 
     def can_move(self, board, row, col):
-        super(Pawn, self).can_move(board, row, col)
-        if self.col != col:
+        if not super(Pawn, self).can_move(board, row, col):
             return False
-        if self.short_move(row) or self.big_move(row):
+        if self.can_eat(board, row, col):
+            return True
+        if self.short_move(row, col) or self.big_move(row, col):
             return True
         return False
 
-    def short_move(self, row):
+    def short_move(self, row, col):
         """Ход на 1 клетку"""
-        return self.row + self.direction == row
+        return self.col == col and self.row + self.direction == row
 
-    def big_move(self, row):
+    def big_move(self, row, col):
         """Ход на 2 клетки"""
-        return self.row == self.first_move and self.row + 2 * self.direction == row
+        return self.col == col and \
+            self.row == self.first_move and self.row + 2 * self.direction == row
+
+    def can_eat(self, board, row, col):
+        #  магия с чёрными пешками, посмотреть на рефакторинге
+        if Figure.can_move(self, board, row + 1, col + 1) or Figure.can_move(self, board, row + 1, col - 1):
+            return True
 
     def check_path_empty(self, board, new_row, new_col):
-        return self.short_move(new_row)
+        return self.short_move(new_row, new_col)
 
     def char(self):
         return 'P'
@@ -74,7 +88,8 @@ class Pawn(Figure):
 class Knight(Figure):
     # пока не трогаю, но можно сделать через модуль от разницы прошлой и настоящей координаты
     def can_move(self, board, new_row, new_col):
-        super(Knight, self).can_move(board, new_row, new_col)
+        if not super(Knight, self).can_move(board, new_row, new_col):
+            return False
         if ((self.row + 1 == new_row and self.col + 2 == new_col)
                 or (self.row - 1 == new_row and self.col + 2 == new_col)
                 or (self.row + 1 == new_row and self.col - 2 == new_col)
@@ -95,7 +110,8 @@ class Knight(Figure):
 
 class Bishop(Figure):
     def can_move(self, board, new_row, new_col):
-        super(Bishop, self).can_move(board, new_row, new_col)
+        if not super(Bishop, self).can_move(board, new_row, new_col):
+            return False
         if self.col - self.row == new_col - new_row:
             return self.check_path_empty(board, new_row, new_col)
         if self.col + self.row == new_col + new_row:
@@ -121,9 +137,10 @@ class Bishop(Figure):
         return 3
 
 
-class Rook(Knight):
+class Rook(Figure):
     def can_move(self, board, new_row, new_col):
-        super(Rook, self).can_move(board, new_row, new_col)
+        if not super(Rook, self).can_move(board, new_row, new_col):
+            return False
         if self.row == new_row:
             return self.check_path_row_empty(board, new_row)
         if self.col == new_col:
