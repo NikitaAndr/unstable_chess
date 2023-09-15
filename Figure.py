@@ -3,6 +3,19 @@ import pygame.transform
 from const import *
 
 
+def can_move_parent(can_move):
+    def can_move_new(*args, **kwargs):
+        if not Figure.can_move(*args, *kwargs):
+            return False
+
+        return can_move(*args, *kwargs)
+    return can_move_new
+
+
+def copy(copy_obj, cls):
+    return cls(copy_obj.row, copy_obj.col, copy_obj.color)
+
+
 class Figure:
     def __init__(self, row, col, color: bool):
         self.row = row
@@ -27,7 +40,7 @@ class Figure:
         return False
 
     @staticmethod
-    def check_path_empty(self, board, new_row, new_col):
+    def check_path_empty(board, new_row, new_col):
         return True
 
     def char(self):
@@ -51,10 +64,9 @@ class Pawn(Figure):
         self.first_move = row
         self.direction = 1 if self.color else -1
 
+    @can_move_parent
     def can_move(self, board, row, col):
-        if not super(Pawn, self).can_move(board, row, col):
-            return False
-        if self.can_eat(board, row, col):
+        if self.can_eat(row, col):
             return True
         if self.short_move(row, col) or self.big_move(row, col):
             return True
@@ -69,9 +81,8 @@ class Pawn(Figure):
         return self.col == col and \
             self.row == self.first_move and self.row + 2 * self.direction == row
 
-    def can_eat(self, board, row, col):
-        #  магия с чёрными пешками, посмотреть на рефакторинге
-        if Figure.can_move(self, board, row + 1, col + 1) or Figure.can_move(self, board, row + 1, col - 1):
+    def can_eat(self, row, col):
+        if self.row == row - 1 and self.col + 1 == col or self.col - 1 == col:
             return True
 
     def check_path_empty(self, board, new_row, new_col):
@@ -87,9 +98,8 @@ class Pawn(Figure):
 
 class Knight(Figure):
     # пока не трогаю, но можно сделать через модуль от разницы прошлой и настоящей координаты
+    @can_move_parent
     def can_move(self, board, new_row, new_col):
-        if not super(Knight, self).can_move(board, new_row, new_col):
-            return False
         if ((self.row + 1 == new_row and self.col + 2 == new_col)
                 or (self.row - 1 == new_row and self.col + 2 == new_col)
                 or (self.row + 1 == new_row and self.col - 2 == new_col)
@@ -109,9 +119,8 @@ class Knight(Figure):
 
 
 class Bishop(Figure):
+    @can_move_parent
     def can_move(self, board, new_row, new_col):
-        if not super(Bishop, self).can_move(board, new_row, new_col):
-            return False
         if self.col - self.row == new_col - new_row:
             return self.check_path_empty(board, new_row, new_col)
         if self.col + self.row == new_col + new_row:
@@ -138,9 +147,8 @@ class Bishop(Figure):
 
 
 class Rook(Figure):
+    @can_move_parent
     def can_move(self, board, new_row, new_col):
-        if not super(Rook, self).can_move(board, new_row, new_col):
-            return False
         if self.row == new_row:
             return self.check_path_row_empty(board, new_row)
         if self.col == new_col:
@@ -169,9 +177,12 @@ class Rook(Figure):
         return 5
 
 
-class Queen(Bishop, Rook):
+class Queen(Figure):
     def can_move(self, board, new_row, new_col):
-        return Bishop.can_move(self, board, new_row, new_col) or Rook.can_move(self, board, new_row, new_col)
+        bishop_copy_self = copy(self, Bishop)
+        rook_copy_self = copy(self, Rook)
+        return Bishop.can_move(bishop_copy_self, board, new_row, new_col) \
+            or Rook.can_move(rook_copy_self, board, new_row, new_col)
 
     def char(self):
         return 'Q'
@@ -182,8 +193,9 @@ class Queen(Bishop, Rook):
 
 
 class King(Figure):
+    @can_move_parent
     def can_move(self, board, new_row, new_col):
-        if abs(self.row - new_row) == 1 and abs(self.col - new_col) == 1 and board[new_row][new_col] is None:
+        if abs(self.row - new_row) == 1 and abs(self.col - new_col) == 1:
             return True
 
     def char(self):
