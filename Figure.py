@@ -203,7 +203,7 @@ class Queen(Figure):
 class King(Figure):
     @can_move_parent
     def can_move(self, board, new_row, new_col):
-        if abs(self.row - new_row) == 1 and abs(self.col - new_col) == 1:
+        if abs(self.row - new_row) <= 1 and abs(self.col - new_col) <= 1:
             return True
 
     def char(self):

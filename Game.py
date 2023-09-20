@@ -87,5 +87,5 @@ class VisualGame(Game):
 
     def draw_figure(self, i, j):
         cor = convert.little_visual_chess((i, j))
-        if (figure := self.board.field[cor[0]][cor[1]]) is not None:  # сделать обращение по индексу к доске
+        if (figure := self.board.board[cor[0]][cor[1]]) is not None:  # сделать обращение по индексу к доске
             self.screen.blit(figure.get_img(), convert.little_visual_visual((i, j)))
