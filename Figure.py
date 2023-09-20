@@ -30,6 +30,8 @@ class Figure:
         return self.color
 
     def is_enemy(self, figure):
+        if figure is None:
+            return False
         return figure.get_color() != self.get_color()
 
     def can_move(self, board, new_row, new_col):
@@ -67,26 +69,27 @@ class Pawn(Figure):
         self.first_move = row
         self.direction = 1 if self.color else -1
 
-    @can_move_parent
     def can_move(self, board, row, col):
-        if self.can_eat(board, row, col):
+        move_place = board[row][col]
+        if self.can_eat(move_place, row, col):
             return True
-        if self.short_move(row, col) or self.big_move(row, col):
+        if self.short_move(move_place, row, col) or self.big_move(move_place, row, col):
             return True
         return False
 
-    def short_move(self, row, col):
+    def short_move(self, move_place, row, col):
         """Ход на 1 клетку"""
-        return self.col == col and self.row + self.direction == row
+        return move_place is None and\
+            self.col == col and self.row + self.direction == row
 
-    def big_move(self, row, col):
+    def big_move(self, move_place, row, col):
         """Ход на 2 клетки"""
-        return self.col == col and \
+        return move_place is None and \
+            self.col == col and \
             self.row == self.first_move and self.row + 2 * self.direction == row
 
-    def can_eat(self, board, row, col):
-        move_place = board[row][col]
-        if not(move_place is not None and board[row][col].is_enemy(self)):
+    def can_eat(self, move_place, row, col):
+        if not self.is_enemy(move_place):
             return False
         if self.row == row - self.direction and (self.col + 1 == col or self.col - 1 == col):
             return True
