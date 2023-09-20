@@ -29,6 +29,9 @@ class Figure:
     def get_color(self):
         return self.color
 
+    def is_enemy(self, figure):
+        return figure.get_color() != self.get_color()
+
     def can_move(self, board, new_row, new_col):
         if not(0 <= new_row <= 7 and 0 <= new_col <= 7):
             return False
@@ -66,7 +69,7 @@ class Pawn(Figure):
 
     @can_move_parent
     def can_move(self, board, row, col):
-        if self.can_eat(row, col):
+        if self.can_eat(board, row, col):
             return True
         if self.short_move(row, col) or self.big_move(row, col):
             return True
@@ -81,9 +84,13 @@ class Pawn(Figure):
         return self.col == col and \
             self.row == self.first_move and self.row + 2 * self.direction == row
 
-    def can_eat(self, row, col):
-        if self.row == row - 1 and self.col + 1 == col or self.col - 1 == col:
+    def can_eat(self, board, row, col):
+        move_place = board[row][col]
+        if not(move_place is not None and board[row][col].is_enemy(self)):
+            return False
+        if self.row == row - self.direction and (self.col + 1 == col or self.col - 1 == col):
             return True
+        return False
 
     def check_path_empty(self, board, new_row, new_col):
         return self.short_move(new_row, new_col)
@@ -124,15 +131,13 @@ class Bishop(Figure):
         if self.col - self.row == new_col - new_row:
             return self.check_path_empty(board, new_row, new_col)
         if self.col + self.row == new_col + new_row:
-            return self.check_path_empty(board, new_row, new_col, True)
+            return self.check_path_empty(board, new_row, new_col)
         return False
 
-    def check_path_empty(self, board, new_row, new_col, is_primary_diagonal=False):
+    def check_path_empty(self, board, new_row, new_col):
         direction_row = 1 if new_row - self.row > 0 else -1
         direction_col = 1 if new_col - self.col > 0 else -1
-        direction_col *= 1 if is_primary_diagonal else -1
-        for i in range(1,
-                       abs(self.row - new_row) - 1):  # полная версия: max(abs(self.row - new_row), abs(self.col - new_col))
+        for i in range(1, abs(self.row - new_row)):
             checked_cor = board[self.row + i * direction_row][self.col + i * direction_col]
             if checked_cor is not None:
                 return False
