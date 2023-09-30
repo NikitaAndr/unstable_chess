@@ -158,21 +158,21 @@ class Rook(Figure):
     @can_move_parent
     def can_move(self, board, new_row, new_col):
         if self.row == new_row:
-            return self.check_path_row_empty(board, new_row)
+            return self.check_path_row_empty(board, new_col)
         if self.col == new_col:
-            return self.check_path_col_empty(board, new_col)
+            return self.check_path_col_empty(board, new_row)
         return False
 
-    def check_path_row_empty(self, board, new_row):
+    def check_path_col_empty(self, board, new_row):
         direction = 1 if self.row - new_row > 0 else -1
-        for i in range(1, abs(self.row - new_row) - 1):
+        for i in range(1, abs(self.row - new_row)):
             if board[self.row + i * direction][self.col] is not None:
                 return False
         return True
 
-    def check_path_col_empty(self, board, new_col):
+    def check_path_row_empty(self, board, new_col):
         direction = 1 if self.col - new_col > 0 else -1
-        for i in range(1, abs(self.col - new_col) - 1):
+        for i in range(1, abs(self.col - new_col)):
             if board[self.row][self.col + i * direction] is not None:
                 return False
         return True
