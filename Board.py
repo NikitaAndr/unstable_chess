@@ -80,15 +80,46 @@ class Board:
             return False
         if not self.is_current_player(piece.get_color()):
             return False
-        if not piece.can_move(self.board, *new_cor):
+        if not (piece.can_move(self.board, *new_cor) or
+                self.can_short_castling(piece.row, piece.col, *new_cor) or
+                self.can_long_castling(piece.row, piece.col, *new_cor)):
             return False
         return True
 
-    def move_piece(self, piece, row, col, row1, col1):
+    def can_short_castling(self, row, col, new_row, new_col):
+        if not self.correct_coordinates(row, col + 3):
+            return False
+
+        king, rook = self.board[row][col], self.board[row][col + 3]
+        if not (isinstance(king, King) and isinstance(rook, Rook) and
+                king.can_castle and rook.can_castle and
+                row == new_row and col + 2 == new_col and
+                self.board[row][col + 1] is None and self.board[row][col + 2] is None):
+            return False
+
+        self.move_piece(rook, row, col + 3, new_row, col + 1, change_stroke=False)
+        return True
+
+    def can_long_castling(self, row, col, new_row, new_col):
+        if not self.correct_coordinates(row, col - 4):
+            return False
+
+        king, rook = self.board[row][col], self.board[row][col - 4]
+        if not (isinstance(king, King) and isinstance(rook, Rook) and
+                king.can_castle and rook.can_castle and
+                row == new_row and col - 2 == new_col and
+                all(map(lambda x: self.board[row][col + x] is None, (-1, -2, -3)))):
+            return False
+
+        self.move_piece(rook, row, col - 4, new_row, col - 1, change_stroke=False)
+        return True
+
+    def move_piece(self, piece, row, col, row1, col1, change_stroke=True):
         self.board[row][col] = None
         self.board[row1][col1] = piece
-        piece.set_position(row1, col1)
-        self.color = not self.color
+        piece.set_position(row1, col1)  # далее можно вставить функцию для уязвимого хвоста пешки во время большого хода
+        if change_stroke:
+            self.color = not self.color
 
     def is_under_attack(self, figure):
         for i in range(len(self.board)):

@@ -13,6 +13,17 @@ class Game:
         # self.board.make_move('g1 - f3')
         # self.board.make_move('b8 - c6')
         # self.board.make_move('f1 - b5')
+        # self.board.make_move('d2-d3')
+        # self.board.make_move('d7-d6')
+        # self.board.make_move('b1-c3')
+        # self.board.make_move('g8-f6')
+        # Система версона
+        self.board.make_move('d2 - d4')
+        self.board.make_move('d7 - d5')
+        self.board.make_move('b1 - c3')
+        self.board.make_move('g8 - f6')
+        self.board.make_move('c1 - g5')
+
 
     def start(self): ...
 
