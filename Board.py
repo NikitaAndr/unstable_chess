@@ -61,14 +61,15 @@ class Board:
             return False  # можно все False заменить на raise, лучше с точки зрения архитектуры
         if not self.check_move_piece(piece := self.board[cor[0]][cor[1]], new_cor):
             return False
-        self.move_piece(piece, *cor, *new_cor)
+        self.move_piece(piece, *cor, *new_cor, transformation_figure=transformation_figure)
         return True
 
     def chess_check(self, piece):
         """Проверка шаха, если да, то фигура возвращается"""
         if isinstance(piece, King) and self.is_under_attack(piece):
             return True
-        if self.is_under_attack(self.get_figure(King, self.color)[0]):  # возможны проблемы при режиме "анархия"
+        if not isinstance(piece, King) and self.is_under_attack(self.get_figure(King, self.color)[0]):
+            # возможны проблемы при режиме "анархия"
             return True
         return False
 
@@ -120,17 +121,27 @@ class Board:
         self.move_piece(rook, row, col - 4, new_row, col - 1, change_stroke=False)
         return True
 
-    def move_piece(self, piece, row, col, row1, col1, change_stroke=True):
+    def move_piece(self, piece, row, col, row1, col1, change_stroke=True, transformation_figure=Queen):
         self.board[row][col] = None
+
         if self.chess_check(piece):
             self.board[row][col] = piece
             return False
 
         self.board[row1][col1] = piece
+        self.update(piece, row1, col1, change_stroke, transformation_figure)  # можно перенести на уровень выше
+        return True
+
+    def update(self, piece, row1, col1, change_stroke, transformation_figure):
         piece.set_position(row1, col1)  # можно вставить функцию для уязвимого хвоста пешки во время большого хода
         if change_stroke:
             self.color = not self.color
-        return True
+
+        transformation_figure = transformation_figure if transformation_figure is not None else Queen
+        for i in (0, -1):
+            for j in range(len(self.board[i])):
+                if isinstance(self.board[i][j], Pawn):
+                    self.board[i][j] = copy(self.board[i][j], transformation_figure)
 
     def is_under_attack(self, figure):
         for i in range(len(self.board)):

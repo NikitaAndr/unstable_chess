@@ -1,4 +1,14 @@
+from Figure import *
 from const import *
+
+
+sl = {'P': Pawn,
+      'Q': Queen,
+      'K': King,
+      'N': Knight,
+      'B': Bishop,
+      'R': Rook,
+      }
 
 
 def chess_math(stra: str):
@@ -6,7 +16,7 @@ def chess_math(stra: str):
 
     transformation_figure = None
     if '=' in new_cor and len(new_cor) > 3:
-        transformation_figure = new_cor[4]
+        transformation_figure = sl[new_cor[4]]
 
     return chess_math_cor(cor), chess_math_cor(new_cor), transformation_figure
 
