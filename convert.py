@@ -2,13 +2,20 @@ from const import *
 
 
 def chess_math(stra: str):
-    print(stra)
-    cor, new_cor = stra.replace(' ', '').split('-')
+    cor, new_cor = stra.replace(' ', '').replace('—', '-').replace('x', '-').split('-')
+
+    transformation_figure = None
+    if '=' in new_cor and len(new_cor) > 3:
+        transformation_figure = new_cor[4]
+
+    return chess_math_cor(cor), chess_math_cor(new_cor), transformation_figure
+
+
+def chess_math_cor(cor):
+    cor = cor[1:] if cor.istitle() else cor
     col = ord(cor[0]) - ord('a')
-    col1 = ord(new_cor[0]) - ord('a')
     row = int(cor[1]) - 1
-    row1 = int(new_cor[1]) - 1
-    return (row, col), (row1, col1)
+    return row, col
 
 
 def visual_chess(cor):

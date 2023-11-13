@@ -18,11 +18,23 @@ class Game:
         # self.board.make_move('b1-c3')
         # self.board.make_move('g8-f6')
         # Система версона
-        self.board.make_move('d2 - d4')
-        self.board.make_move('d7 - d5')
-        self.board.make_move('b1 - c3')
-        self.board.make_move('g8 - f6')
-        self.board.make_move('c1 - g5')
+        # self.board.make_move('d2 - d4')
+        # self.board.make_move('d7 - d5')
+        # self.board.make_move('b1 - c3')
+        # self.board.make_move('g8 - f6')
+        # self.board.make_move('c1 - g5')
+        # детский мат
+        self.board.make_moves('''1.
+        e2—e4
+        e7—e5
+        2.
+        Сf1—c4
+        Кb8—c6
+        3.
+        Фd1—h5
+        Кg8—f6
+        4.
+        Фh5xf7  ''')
 
 
     def start(self): ...
@@ -79,7 +91,7 @@ class VisualGame(Game):
                 pos = convert.visual_chess(pygame.mouse.get_pos())
                 if self.selected_square == (-1, -1):
                     self.selected_square = pos
-                elif not self.board.make_move((self.selected_square, pos)):
+                elif not self.board.make_move((self.selected_square, pos, None)):
                     self.selected_square = (-1, -1)
 
         return True

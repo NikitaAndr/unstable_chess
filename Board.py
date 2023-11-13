@@ -50,21 +50,27 @@ class Board:
         внутри доски"""
         return 0 <= row < 8 and 0 <= col < 8
 
+    def make_moves(self, stra: str | tuple | list):
+        for i in stra.split():
+            if '.' not in i:  # тк иначе i[-1] - это обозначение хода по порядку
+                self.make_move(i)
+
     def make_move(self, stra: str | tuple | list):
-        cor, new_cor = convert.chess_math(stra) if (type(stra) is str) else stra
+        cor, new_cor, transformation_figure = convert.chess_math(stra) if (type(stra) is str) else stra
         if not self.check_cords(cor, new_cor):
             return False  # можно все False заменить на raise, лучше с точки зрения архитектуры
         if not self.check_move_piece(piece := self.board[cor[0]][cor[1]], new_cor):
             return False
         self.move_piece(piece, *cor, *new_cor)
-        self.chess_check(piece, cor, new_cor)
         return True
 
-    def chess_check(self, piece, cor, new_cor):
+    def chess_check(self, piece):
         """Проверка шаха, если да, то фигура возвращается"""
-        if self.is_under_attack(self.get_figure(King, not self.color)[0]):  # возможны проблемы при режиме "анархия"
-            self.move_piece(piece, *new_cor, *cor)
-            return False
+        if isinstance(piece, King) and self.is_under_attack(piece):
+            return True
+        if self.is_under_attack(self.get_figure(King, self.color)[0]):  # возможны проблемы при режиме "анархия"
+            return True
+        return False
 
     def check_cords(self, cor, new_cor):
         if cor == new_cor:
@@ -116,10 +122,15 @@ class Board:
 
     def move_piece(self, piece, row, col, row1, col1, change_stroke=True):
         self.board[row][col] = None
+        if self.chess_check(piece):
+            self.board[row][col] = piece
+            return False
+
         self.board[row1][col1] = piece
-        piece.set_position(row1, col1)  # далее можно вставить функцию для уязвимого хвоста пешки во время большого хода
+        piece.set_position(row1, col1)  # можно вставить функцию для уязвимого хвоста пешки во время большого хода
         if change_stroke:
             self.color = not self.color
+        return True
 
     def is_under_attack(self, figure):
         for i in range(len(self.board)):
