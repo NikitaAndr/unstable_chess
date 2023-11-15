@@ -1,6 +1,7 @@
 from const import *
 from Figure import *
 import convert
+from Erors import Stalemate
 
 
 class Board:
@@ -122,13 +123,15 @@ class Board:
         return True
 
     def move_piece(self, piece, row, col, row1, col1, change_stroke=True, transformation_figure=Queen):
+        board_copy = self.board.copy()
+
         self.board[row][col] = None
+        self.board[row1][col1] = piece
 
         if self.chess_check(piece):
-            self.board[row][col] = piece
+            self.board = board_copy
             return False
 
-        self.board[row1][col1] = piece
         self.update(piece, row1, col1, change_stroke, transformation_figure)  # можно перенести на уровень выше
         return True
 
@@ -136,7 +139,11 @@ class Board:
         piece.set_position(row1, col1)  # можно вставить функцию для уязвимого хвоста пешки во время большого хода
         if change_stroke:
             self.color = not self.color
+        self.transform_pawn(transformation_figure)
+        if len(self.get_figure()) == 1:
+            raise Stalemate()
 
+    def transform_pawn(self, transformation_figure):
         transformation_figure = transformation_figure if transformation_figure is not None else Queen
         for i in (0, -1):
             for j in range(len(self.board[i])):
@@ -151,14 +158,12 @@ class Board:
                         if self.board[i][j].can_move(self.board, figure.row, figure.col):
                             return True
 
-    def get_figure(self, cls, color=None):  # требуется рефакторинг и возможно оптимизация
+    def get_figure(self, cls=None, color=None):  # требуется рефакторинг и возможно оптимизация
         rez = []
         for i in self.board:
             for j in i:
-                if type(j) == cls:
-                    if color is None:
-                        rez.append(j)
-                    elif j is not None and color == j.color:
+                if (cls is None) or isinstance(j, cls):
+                    if (color is None) or (j is not None and color == j.color):
                         rez.append(j)
         return rez
 

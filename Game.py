@@ -1,22 +1,33 @@
 import convert
 from Board import Board
 from const import *
+from Erors import Stalemate
 import pygame
+
+
+def check_end_game(start):
+    def start_new(*args, **kwargs):
+        try:
+            return start(*args, *kwargs)
+        except Stalemate:
+            print('End Game!!!')
+
+    return start_new
 
 
 class Game:
     def __init__(self):
         self.board = Board()
         # Итальянка
-        # self.board.make_move('e2 - e4')
-        # self.board.make_move('e7 - e5')
-        # self.board.make_move('g1 - f3')
-        # self.board.make_move('b8 - c6')
-        # self.board.make_move('f1 - b5')
-        # self.board.make_move('d2-d3')
-        # self.board.make_move('d7-d6')
-        # self.board.make_move('b1-c3')
-        # self.board.make_move('g8-f6')
+        self.board.make_move('e2 - e4')
+        self.board.make_move('e7 - e5')
+        self.board.make_move('g1 - f3')
+        self.board.make_move('b8 - c6')
+        self.board.make_move('f1 - b5')
+        self.board.make_move('d2-d3')
+        self.board.make_move('d7-d6')
+        self.board.make_move('b1-c3')
+        self.board.make_move('g8-f6')
         # Система версона
         # self.board.make_move('d2 - d4')
         # self.board.make_move('d7 - d5')
@@ -24,18 +35,17 @@ class Game:
         # self.board.make_move('g8 - f6')
         # self.board.make_move('c1 - g5')
         # детский мат
-        self.board.make_moves('''1.
-        e2—e4
-        e7—e5
-        2.
-        Сf1—c4
-        Кb8—c6
-        3.
-        Фd1—h5
-        Кg8—f6
-        4.
-        Фh5xf7  ''')
-
+        # self.board.make_moves('''1.
+        # e2—e4
+        # e7—e5
+        # 2.
+        # Сf1—c4
+        # Кb8—c6
+        # 3.
+        # Фd1—h5
+        # Кg8—f6
+        # 4.
+        # Фh5xf7  ''')
 
     def start(self): ...
 
@@ -45,6 +55,7 @@ class Game:
 
 
 class ConsoleGame(Game):
+    @check_end_game
     def start(self):
         while True:
             self.init_invitation()
@@ -75,6 +86,7 @@ class VisualGame(Game):
 
         self.selected_square = (-1, -1)
 
+    @check_end_game
     def start(self):
         running = True
         while (not self.board.mate) and running:
