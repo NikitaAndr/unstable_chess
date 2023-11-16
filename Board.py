@@ -1,7 +1,6 @@
 from const import *
 from Figure import *
 import convert
-from Erors import Stalemate
 
 
 class Board:

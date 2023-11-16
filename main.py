@@ -2,7 +2,9 @@ from Game import VisualGame
 
 
 def main():
-    VisualGame().start()
+    game = VisualGame()
+    game.load_gambit('Итальянка')
+    game.start()
 
 
 if __name__ == '__main__':
