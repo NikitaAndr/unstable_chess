@@ -1,4 +1,4 @@
-from Game import VisualGame
+from Game.Visual_game import VisualGame
 
 
 def main():
