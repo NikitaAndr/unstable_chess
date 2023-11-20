@@ -28,6 +28,10 @@ def chess_math_cor(cor):
     return row, col
 
 
+def math_chess_cor(cor: int):
+    return chr(cor + ord('a'))
+
+
 def visual_chess(cor):
     return 7 - (cor[1] - left) // cell_size, \
            (cor[0] - top) // cell_size

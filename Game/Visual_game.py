@@ -54,7 +54,7 @@ class VisualGame(Game):
         pos = convert.visual_chess(pygame.mouse.get_pos())
         if self._selected_square == (-1, -1):
             self._selected_square = pos
-        elif not self._board.make_move((self._selected_square, pos, None)):
+        elif not self._board.make_move((self._selected_square, pos, None))[0]:
             self._selected_square = (-1, -1)
 
     def render(self) -> None:

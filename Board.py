@@ -1,39 +1,84 @@
-from const import *
-from Figure import *
-import convert
+"""Модуль шахматной доски
+
+Импорты модулей проекта:
+const: WHITE, BLACK - импорты цветов фигур
+Figure: Bishop, King, Knight, Pawn, Figure, Queen, Rook - все возможные фигуры
+Figure: copy - функция для копирования фигур
+convert: chess_math, math_chess_cor - функции перевода из математической в шахматную и наоборот
+Errors: IncorrectCoordinates - ошибка, сообщающая, что пользователь выдал не верные координаты
+
+try_error - Декоратор обрабатывающий ошибки выдаваемые классом доски в функции make_move
+
+Board - сам класс доски"""
+
+from const import WHITE, BLACK
+from Figure import Bishop, King, Knight, Pawn, Figure, Queen, Rook, copy
+from convert import chess_math, math_chess_cor
+from Errors import IncorrectCoordinates
+
+
+def try_error(make_move):
+    def new_make_move(*args, **kwargs) -> tuple[bool, str]:
+        try:
+            make_move(*args, **kwargs)
+            return True, ''
+        except IncorrectCoordinates as error:
+            return False, str(error)
+
+    return new_make_move
 
 
 class Board:
-    def __init__(self):
+    """Класс доски, на которой происходит действие игры.
+
+    Запуск игры происходит через главную функцию make_moves.
+    В make_moves может вызываться ошибка IncorrectCoordinates,
+     которая сигнализирует о некорректности координат (см класс ошибки)"""
+
+    def __init__(self, count_col=8, count_row=8):
+        """Инициализация полей.
+
+        Публичные поля:
+        count_col, count_row - количество колонок и строк доски,
+        color - цвет, за который можно сходить,
+        mate - флаг мата,
+        board - сама доска.
+
+        Приватные поля:
+        _ald_board - доска до совершения хода, обновляется каждый ход в make_move."""
+
+        self.count_col = count_col
+        self.count_row = count_row
         self.color = WHITE
         self.mate = False
+        self.stalemate = False
 
-        self.board = [[None] * 8 for _ in range(8)]
+        self.board = [[None] * count_col for _ in range(count_row)]
         self.arrange_pawns()
         self.arrange_senior_figures()
 
+        self._ald_board = self.board
+
     def __repr__(self):
+        """Вывод доски в шахматном представлении с названиями полей."""
         stra = '     +----+----+----+----+----+----+----+----+ \n'
-        for row in range(7, -1, -1):  # возможно списочное выражение
-            stra += f'  {row}  '
-            for col in range(8):
+        for row in range(self.count_row - 1, -1, -1):
+            stra += f'  {row + 1}  '
+            for col in range(self.count_col):
                 stra += f'| {self.get_cell(row, col)} '
             stra += '|\n     +----+----+----+----+----+----+----+----+ \n'
-        stra += '        ' + '    '.join([str(col) for col in range(8)])
+        stra += '        ' + '    '.join([math_chess_cor(col) for col in range(self.count_col)])
 
         return stra
 
-    def backstage_print(self):
-        for i in range(8):
-            for j in range(8):
-                print(self.board[i][j])
-
     def arrange_pawns(self):
+        """Расставь пешки."""
         for i in range(8):
             self.board[1][i] = Pawn(1, i, WHITE)
             self.board[6][i] = Pawn(6, i, BLACK)
 
     def arrange_senior_figures(self):
+        """Расставь старшие фигуры."""
         for i in [(0, WHITE), (7, BLACK)]:
             self.board[i[0]][0] = Rook(i[0], 0, i[1])
             self.board[i[0]][1] = Knight(i[0], 1, i[1])
@@ -45,55 +90,88 @@ class Board:
             self.board[i[0]][7] = Rook(i[0], 7, i[1])
 
     @staticmethod
-    def correct_coordinates(row, col) -> bool:
+    def correct_coordinates(row: int, col: int) -> bool:
         """Функция проверяет, что координаты (row, col) лежат
-        внутри доски"""
+        внутри доски."""
         return 0 <= row < 8 and 0 <= col < 8
 
-    def make_moves(self, stra: str | tuple | list):
+    def make_moves(self, stra: str | tuple | list) -> None:
+        """Проиграть партию до определённого момента."""
         for i in stra.split():
             if '.' not in i:  # тк иначе i[-1] - это обозначение хода по порядку
                 self.make_move(i)
 
-    def make_move(self, stra: str | tuple | list):
-        cor, new_cor, transformation_figure = convert.chess_math(stra) if (type(stra) is str) else stra
-        if not self.check_cords(cor, new_cor):
-            return False  # можно все False заменить на raise, лучше с точки зрения архитектуры
-        if not self.check_move_piece(piece := self.board[cor[0]][cor[1]], new_cor):
-            return False
-        self.move_piece(piece, *cor, *new_cor, transformation_figure=transformation_figure)
-        return True
+    @try_error
+    def make_move(self, stra: str | tuple | list) -> None:
+        """Сделать ход по координатам stra
 
-    def chess_check(self, piece):
-        """Проверка шаха, если да, то фигура возвращается"""
-        if isinstance(piece, King) and self.is_under_attack(piece):
-            return True
-        if not isinstance(piece, King) and self.is_under_attack(self.get_figure(King, self.color)[0]):
-            # возможны проблемы при режиме "анархия"
-            return True
-        return False
+        Формат кода:
+        str: координаты поля в формате PGN в полной форме, например: e4-e5,
+        tuple или list: координаты в формате <row: int><col: int>."""
 
-    def check_cords(self, cor, new_cor):
-        if cor == new_cor:
-            return False
-        if not self.correct_coordinates(*cor):
-            return False
-        if not self.correct_coordinates(*new_cor):
-            return False
-        return True
+        self._ald_board = self.board
+        cor, new_cor, transformation_figure = chess_math(stra) if (type(stra) is str) else stra
+        self._check_cords(cor, new_cor)
+        self._check_piece(cor, new_cor)
+        self._move_piece(*cor, *new_cor)
+        self._chess_check()
+        self._update(transformation_figure=transformation_figure)
 
-    def check_move_piece(self, piece, new_cor):
+    def is_under_attack(self, figure: Bishop | King | Knight | Pawn | Queen | Rook | None):
+        """Проверь, находится ли поле под атакой."""
+        for i in range(len(self.board)):
+            for j in range(len(self.board[0])):
+                if (self.board[i][j] is not None
+                        and self.board[i][j].color != figure.color
+                        and self.board[i][j].can_move(self.board, figure.row, figure.col)):
+                    return True
+
+    def is_current_player(self, other_color: bool) -> bool:
+        """Проверь, является ли цвет, которые был передан (other_color) цветом игрока."""
+        return self.color == other_color
+
+    def get_figure(self, cls=None, color=None):  # возможна оптимизация
+        """Выдай фигуру класса cls и цвета color, если они не указаны, то выдаются все возможные."""
+        rez = []
+        for i in self.board:
+            for j in i:
+                if (cls is None) or isinstance(j, cls):
+                    if (color is None) or (j is not None and color == j.color):
+                        rez.append(j)
+        return rez
+
+    def get_cell(self, row: int, col: int):
+        """Возвращает строку из двух символов. Если в клетке (row, col)
+        находится фигура, символы цвета и фигуры. Если клетка пуста,
+        то два пробела."""
+        piece = self.board[row][col]
         if piece is None:
-            return False
-        if not self.is_current_player(piece.get_color()):
-            return False
-        if not (piece.can_move(self.board, *new_cor) or
-                self.can_short_castling(piece.row, piece.col, *new_cor) or
-                self.can_long_castling(piece.row, piece.col, *new_cor)):
-            return False
-        return True
+            return '  '
+        c = 'w' if piece.get_color() == WHITE else 'b'
+        return c + piece.char()
 
-    def can_short_castling(self, row, col, new_row, new_col):
+    def _check_cords(self, cor: tuple[int, int], new_cor: tuple[int, int]) -> None:
+        """Проверка координат на корректность."""
+        if cor == new_cor:
+            raise IncorrectCoordinates('Нельзя просто поднять фигуру и поставить её на тоже самое место')
+        if not self.correct_coordinates(*cor):
+            raise IncorrectCoordinates('Координаты фигуры за пределами доски')
+        if not self.correct_coordinates(*new_cor):
+            raise IncorrectCoordinates('Нельзя ставить фигуру за пределы доски')
+
+    def _check_piece(self, cor: tuple[int, int], new_cor: tuple[int, int]) -> None:
+        """Проверка, может ли фигура по выбранным координатам сходить на новые."""
+        if (piece := self.board[cor[0]][cor[1]]) is None:
+            raise IncorrectCoordinates('Вы берёте не существующую фигуру')
+        if not self.is_current_player(piece.get_color()):
+            raise IncorrectCoordinates('Вы не можете взять фигуру другого игрока')
+        if not (piece.can_move(self.board, *new_cor) or
+                self._can_short_castling(*cor, *new_cor) or
+                self._can_long_castling(*cor, *new_cor)):
+            raise IncorrectCoordinates('Фигура не может сходить на это поле')
+
+    def _can_short_castling(self, row: int, col: int, new_row: int, new_col: int) -> bool:
+        """Проверь, может ли игрок совершить длинную рокировку. И если да, то двинь ладью на новое место."""
         if not self.correct_coordinates(row, col + 3):
             return False
 
@@ -104,10 +182,11 @@ class Board:
                 self.board[row][col + 1] is None and self.board[row][col + 2] is None):
             return False
 
-        self.move_piece(rook, row, col + 3, new_row, col + 1, change_stroke=False)
+        self._move_piece(row, col + 3, new_row, col + 1)
         return True
 
-    def can_long_castling(self, row, col, new_row, new_col):
+    def _can_long_castling(self, row: int, col: int, new_row: int, new_col: int):
+        """Проверь, может ли игрок совершить длинную рокировку. И если да, то двинь ладью на новое место."""
         if not self.correct_coordinates(row, col - 4):
             return False
 
@@ -118,63 +197,39 @@ class Board:
                 all(map(lambda x: self.board[row][col + x] is None, (-1, -2, -3)))):
             return False
 
-        self.move_piece(rook, row, col - 4, new_row, col - 1, change_stroke=False)
+        self._move_piece(row, col - 4, new_row, col - 1)
         return True
 
-    def move_piece(self, piece, row, col, row1, col1, change_stroke=True, transformation_figure=Queen):
-        board_copy = self.board.copy()
-
+    def _move_piece(self, row: int, col: int, row1: int, col1: int):
+        """Двинь фигуру с координат row, col на row1, col1 БЕЗ ПРОВЕРОК."""
+        piece = self.board[row][col]
         self.board[row][col] = None
         self.board[row1][col1] = piece
+        piece.set_position(row1, col1)
+        # можно вставить функцию для уязвимого хвоста пешки во время большого хода
 
-        if self.chess_check(piece):
-            self.board = board_copy
-            return False
+    def _chess_check(self):
+        """Проверь шах, если да, то верни доску в прежнее состояние."""
+        if self.is_under_attack(self.get_figure(King, self.color)[0]):
+            self.board = self._ald_board
+            raise IncorrectCoordinates('Шах')
 
-        self.update(piece, row1, col1, change_stroke, transformation_figure)  # можно перенести на уровень выше
-        return True
+    def _update(self, change_stroke=True, transformation_figure: Figure | None = Queen):
+        """Обнови фигуры после хода
 
-    def update(self, piece, row1, col1, change_stroke, transformation_figure):
-        piece.set_position(row1, col1)  # можно вставить функцию для уязвимого хвоста пешки во время большого хода
+        change_stroke - требуется ли передача хода
+        transformation_figure - в какую фигуру превратить пешки"""
+
         if change_stroke:
             self.color = not self.color
-        self.transform_pawn(transformation_figure)
-        if len(self.get_figure()) == 1:
-            raise Stalemate()
+        self._transform_pawn(transformation_figure)
+        if len(self.get_figure()) == 2:
+            self.stalemate = True
 
-    def transform_pawn(self, transformation_figure):
+    def _transform_pawn(self, transformation_figure: Figure | None = Queen):
+        """Преврати все пешки на последних линиях в фигуру (transformation_figure)."""
         transformation_figure = transformation_figure if transformation_figure is not None else Queen
         for i in (0, -1):
             for j in range(len(self.board[i])):
                 if isinstance(self.board[i][j], Pawn):
                     self.board[i][j] = copy(self.board[i][j], transformation_figure)
-
-    def is_under_attack(self, figure):
-        for i in range(len(self.board)):
-            for j in range(len(self.board[0])):
-                if self.board[i][j] is not None:
-                    if self.board[i][j].color != figure.color:
-                        if self.board[i][j].can_move(self.board, figure.row, figure.col):
-                            return True
-
-    def get_figure(self, cls=None, color=None):  # требуется рефакторинг и возможно оптимизация
-        rez = []
-        for i in self.board:
-            for j in i:
-                if (cls is None) or isinstance(j, cls):
-                    if (color is None) or (j is not None and color == j.color):
-                        rez.append(j)
-        return rez
-
-    def is_current_player(self, other_color):
-        return self.color == other_color
-
-    def get_cell(self, row, col):
-        """Возвращает строку из двух символов. Если в клетке (row, col)
-        находится фигура, символы цвета и фигуры. Если клетка пуста,
-        то два пробела."""
-        piece = self.board[row][col]
-        if piece is None:
-            return '  '
-        c = 'w' if piece.get_color() == WHITE else 'b'
-        return c + piece.char()

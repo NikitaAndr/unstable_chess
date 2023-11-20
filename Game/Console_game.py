@@ -39,5 +39,5 @@ class ConsoleGame(Game):
 
     def move(self, cor: str) -> None:
         """Обработка хода"""
-        print('Ход успешен' if self._board.make_move(cor)
-              else 'Координаты некорректны! Попробуйте другой ход!')
+        rez, error = self._board.make_move(cor)
+        print('Ход успешен' if rez else error)
