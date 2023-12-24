@@ -23,7 +23,7 @@ def try_error(make_move):
             make_move(*args, **kwargs)
             return True, ''
         except IncorrectCoordinates as error:
-            return False, str(error)
+            return False, str(error.msg)
 
     return new_make_move
 
@@ -35,7 +35,7 @@ class Board:
     В make_moves может вызываться ошибка IncorrectCoordinates,
      которая сигнализирует о некорректности координат (см класс ошибки)"""
 
-    def __init__(self, count_col=8, count_row=8):
+    def __init__(self, count_col=8, count_row=8, arrange_figure=True):
         """Инициализация полей.
 
         Публичные поля:
@@ -54,8 +54,9 @@ class Board:
         self.stalemate = False
 
         self.board = [[None] * count_col for _ in range(count_row)]
-        self.arrange_pawns()
-        self.arrange_senior_figures()
+        if arrange_figure:
+            self.arrange_pawns()
+            self.arrange_senior_figures()
 
         self._ald_board = self.board
 
@@ -65,7 +66,7 @@ class Board:
         for row in range(self.count_row - 1, -1, -1):
             stra += f'  {row + 1}  '
             for col in range(self.count_col):
-                stra += f'| {self.get_cell(row, col)} '
+                stra += f'| {"  " if (figure := self.board[row][col]) is None else figure} '
             stra += '|\n     +----+----+----+----+----+----+----+----+ \n'
         stra += '        ' + '    '.join([math_chess_cor(col) for col in range(self.count_col)])
 
@@ -106,7 +107,7 @@ class Board:
         """Сделать ход по координатам stra
 
         Формат кода:
-        str: координаты поля в формате PGN в полной форме, например: e4-e5,
+        str: координаты поля в формате PGN в полной форме, например: e2-e4,
         tuple или list: координаты в формате <row: int><col: int>."""
 
         self._ald_board = self.board
@@ -117,7 +118,7 @@ class Board:
         self._chess_check()
         self._update(transformation_figure=transformation_figure)
 
-    def is_under_attack(self, figure: Bishop | King | Knight | Pawn | Queen | Rook | None):
+    def is_under_attack(self, figure: Figure):
         """Проверь, находится ли поле под атакой."""
         for i in range(len(self.board)):
             for j in range(len(self.board[0])):
@@ -125,12 +126,13 @@ class Board:
                         and self.board[i][j].color != figure.color
                         and self.board[i][j].can_move(self.board, figure.row, figure.col)):
                     return True
+        return False
 
     def is_current_player(self, other_color: bool) -> bool:
         """Проверь, является ли цвет, которые был передан (other_color) цветом игрока."""
         return self.color == other_color
 
-    def get_figure(self, cls=None, color=None):  # возможна оптимизация
+    def get_figure(self, cls=None, color=None) -> list:  # возможна оптимизация
         """Выдай фигуру класса cls и цвета color, если они не указаны, то выдаются все возможные."""
         rez = []
         for i in self.board:
@@ -139,16 +141,6 @@ class Board:
                     if (color is None) or (j is not None and color == j.color):
                         rez.append(j)
         return rez
-
-    def get_cell(self, row: int, col: int):
-        """Возвращает строку из двух символов. Если в клетке (row, col)
-        находится фигура, символы цвета и фигуры. Если клетка пуста,
-        то два пробела."""
-        piece = self.board[row][col]
-        if piece is None:
-            return '  '
-        c = 'w' if piece.get_color() == WHITE else 'b'
-        return c + piece.char()
 
     def _check_cords(self, cor: tuple[int, int], new_cor: tuple[int, int]) -> None:
         """Проверка координат на корректность."""

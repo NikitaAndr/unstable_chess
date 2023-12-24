@@ -24,7 +24,7 @@ def chess_math(stra: str):
 def chess_math_cor(cor):
     cor = cor[1:] if cor.istitle() else cor
     col = ord(cor[0]) - ord('a')
-    row = int(cor[1]) - 1
+    row = int(cor[1:]) - 1
     return row, col
 
 
