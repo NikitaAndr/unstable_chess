@@ -17,7 +17,6 @@ Bishop - класс Слона,
 Rook - класс Ладьи,
 Queen - класс Королевы,
 King - класс Короля."""
-from typing import Any
 
 import pygame.transform
 from const import load_image, cell_size, WHITE
@@ -33,7 +32,7 @@ def can_move_parent(can_move):
     return can_move_new
 
 
-class Figure:  # добавить магические методы описания объекта
+class Figure:
     """Класс-родитель (интерфейс, абстрактный класс) фигур."""
 
     def __init__(self, row: int, col: int, color: bool) -> None:
@@ -206,7 +205,6 @@ class Pawn(Figure):
 class Knight(Figure):
     """Класс коня."""
 
-    # пока не трогаю, но можно сделать через модуль от разницы прошлой и настоящей координаты
     @can_move_parent
     def can_move(self, board: list, new_row: int, new_col: int) -> bool:
         if ((self.row + 1 == new_row and self.col + 2 == new_col)
