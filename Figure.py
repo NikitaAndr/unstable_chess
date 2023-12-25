@@ -273,12 +273,19 @@ class Rook(Figure):
 
     @can_move_parent
     def can_move(self, board: list, new_row: int, new_col: int) -> bool:
-        if (self.row == new_row) or (self.col == new_col):
-            return self.check_path_empty(board, new_row, new_col)
-        return False
+        return (self._can_move_row(board, new_row, new_col) or
+                self._can_move_col(board, new_row, new_col))
+
+    def _can_move_row(self, board: list, new_row: int, new_col: int) -> bool:
+        return (self.row == new_row and
+                self.check_path_row_empty(board, new_col))
+
+    def _can_move_col(self, board: list, new_row: int, new_col: int) -> bool:
+        return (self.col == new_col and
+                self.check_path_col_empty(board, new_row))
 
     def check_path_empty(self, board: list, new_row: int, new_col: int) -> bool:
-        return self.check_path_row_empty(board, new_col) or self.check_path_col_empty(board, new_col)
+        return self.check_path_row_empty(board, new_col) or self.check_path_col_empty(board, new_row)
 
     def check_path_col_empty(self, board: list, new_row: int) -> bool:
         """Проверь, свободен ли путь по горизонтали под номером new_row доски board."""
@@ -308,12 +315,22 @@ class Queen(Figure):
     """Класс королевы (ферзя, визиря)."""
 
     def can_move(self, board: list, new_row: int, new_col: int) -> bool:
-        if ((self.col - self.row == new_col - new_row) or
-                (self.col + self.row == new_col + new_row) or
-                (self.row == new_row) or
-                (self.col == new_col)):
-            return self.check_path_empty(board, new_row, new_col)
+        if (self.can_move_row(board, new_row, new_col) or
+                self.can_move_col(board, new_row, new_col) or
+                self.can_move_diagonal(board, new_row, new_col)):
+            return True
         return False
+
+    def can_move_row(self, board: list, new_row: int, new_col: int) -> bool:
+        return self.row == new_row and self.check_path_row_empty(board, new_col)
+
+    def can_move_col(self, board: list, new_row: int, new_col: int) -> bool:
+        return self.col == new_col and self.check_path_col_empty(board, new_row)
+
+    def can_move_diagonal(self, board: list, new_row: int, new_col: int) -> bool:
+        return (((self.col - self.row == new_col - new_row) or
+                 (self.col + self.row == new_col + new_row)) and
+                self.check_path_diagonal_empty(board, new_row, new_col))
 
     def check_path_empty(self, board: list, new_row: int, new_col: int) -> bool:
         return (self.check_path_col_empty(board, new_row) or
@@ -373,6 +390,7 @@ class King(Figure):
     def can_move(self, board: list, new_row: int, new_col: int) -> bool:
         if abs(self.row - new_row) <= 1 and abs(self.col - new_col) <= 1:
             return True
+        return False
 
     def char(self) -> str:
         return 'K'
