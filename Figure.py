@@ -124,7 +124,8 @@ class Figure:
 
     def can_move(self, board: list, new_row: int, new_col: int) -> bool:
         """Проверь, могу ли я сходить на поле по координатам row, col доски board."""
-        return not self.is_enemy(board[new_row][new_col])
+        return (self.is_enemy(board[new_row][new_col])
+                or board[new_row][new_col] is None)
 
     @staticmethod
     def check_path_empty(board: list, new_row: int, new_col: int) -> bool:
@@ -216,6 +217,8 @@ class Knight(Figure):
                 or (self.row + 2 == new_row and self.col - 1 == new_col)
                 or (self.row - 2 == new_row and self.col - 1 == new_col)):
             return True
+        print(self.row, self.col)
+        print(board)
         return False
 
     def char(self) -> str:

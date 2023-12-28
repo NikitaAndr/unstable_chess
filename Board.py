@@ -23,6 +23,7 @@ def try_error(make_move):
             make_move(*args, **kwargs)
             return True, ''
         except IncorrectCoordinates as error:
+            print(str(error.msg))
             return False, str(error.msg)
 
     return new_make_move
@@ -141,6 +142,11 @@ class Board:
                     if (color is None) or (j is not None and color == j.color):
                         rez.append(j)
         return rez
+
+    @staticmethod
+    def _read_move(cor, new_cor, transformation_figure):
+        with open('last_consignment', mode='a') as file:
+            file.write(f'{cor} {new_cor} {transformation_figure} \n')
 
     def _check_cords(self, cor: tuple[int, int], new_cor: tuple[int, int]) -> None:
         """Проверка координат на корректность."""
