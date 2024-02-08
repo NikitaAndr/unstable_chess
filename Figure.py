@@ -217,8 +217,6 @@ class Knight(Figure):
                 or (self.row + 2 == new_row and self.col - 1 == new_col)
                 or (self.row - 2 == new_row and self.col - 1 == new_col)):
             return True
-        print(self.row, self.col)
-        print(board)
         return False
 
     def char(self) -> str:

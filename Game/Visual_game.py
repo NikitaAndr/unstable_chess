@@ -15,7 +15,8 @@ FPS - количество кадров в секунду."""
 import pygame
 
 from Game.Game import Game, check_end_game
-from const import size, clock, FPS
+from const import size, cell_size, clock, FPS, instability
+from random import choice
 import convert
 
 
@@ -29,9 +30,19 @@ class VisualGame(Game):
         _screen - основной интерфейс взаимодействия с пользователем,
         _selected_square - координаты поля, которые выбрал пользователь в event_handling_mouse."""
         super(VisualGame, self).__init__()
-        self._screen = pygame.display.set_mode(size)
+        self._screen = pygame.display.set_mode(size, pygame.RESIZABLE)
 
         self._selected_square = (-1, -1)
+        self.sp_unstable_event = [
+            self._board.add_right_col,
+            self._board.add_left_col,
+            self._board.add_top_row,
+            self._board.add_down_row,
+            self._board.subtract_down_row,
+            self._board.subtract_top_row,
+            self._board.subtract_right_col,
+            self._board.subtract_left_col,
+        ]
 
     @check_end_game
     def start(self) -> None:
@@ -51,17 +62,23 @@ class VisualGame(Game):
 
     def event_handling_mouse(self) -> None:
         """Обработай события, связанные с нажатием левой кнопки мыши."""
-        pos = convert.visual_chess(pygame.mouse.get_pos())
+        pos = convert.visual_chess(pygame.mouse.get_pos(), self._board.count_row)
         if self._selected_square == (-1, -1):
             self._selected_square = pos
-        elif not self._board.make_move((self._selected_square, pos, None))[0]:
+        else:
+            self._board.make_move((self._selected_square, pos, None))
+            if self._board.count_make_move % instability == 0:
+                self.start_unstable_event()
             self._selected_square = (-1, -1)
+
+    def start_unstable_event(self):
+        choice(self.sp_unstable_event)()
 
     def render(self) -> None:
         """Нарисуй доску."""
-        # могут возникнуть БОЛЬШИЕ проблемы при переходе на доску с переменным количеством строк и столбцов
-        for i in range(8):
-            for j in range(8):
+        self._screen.fill((0, 0, 0))
+        for i in range(self._board.count_col):
+            for j in range(self._board.count_row):
                 self.draw_square(i, j)
                 self.draw_figure(i, j)
 
@@ -69,13 +86,13 @@ class VisualGame(Game):
         """Нарисуй квадрат доски по координатам (от 1 до 8) i-той строки, j-того столбца."""
         # хорошо б сделать проверку на дурака
         color = [200, 200, 200] if (i % 2 == j % 2) else [100, 100, 100]
-        if self._selected_square == convert.little_visual_chess((i, j)):
+        if self._selected_square == convert.little_visual_chess((i, j), self._board.count_row):
             color[2] += 50
-        self._screen.fill(color, (*convert.little_visual_visual((i, j)), 200, 200))
+        self._screen.fill(color, (*convert.little_visual_visual((i, j)), cell_size, cell_size))
 
     def draw_figure(self, i: int, j: int) -> None:
         """Нарисуй фигуру стоящую по координатам (от 1 до 8) i-той строки, j-того столбца."""
         # хорошо б сделать проверку на дурака
-        i_chess, j_chess = convert.little_visual_chess((i, j))
+        i_chess, j_chess = convert.little_visual_chess((i, j), self._board.count_row)
         if (figure := self._board.board[i_chess][j_chess]) is not None:
             self._screen.blit(figure.get_img(), convert.little_visual_visual((i, j)))

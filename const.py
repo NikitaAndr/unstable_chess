@@ -22,6 +22,8 @@ def load_image(name, color_key=None):
 WHITE = 1
 BLACK = 0
 
+instability = 5
+
 size = width, height = 800, 800
 cell_size = 100
 left = 0

@@ -10,6 +10,7 @@ Errors: IncorrectCoordinates - ошибка, сообщающая, что пол
 try_error - Декоратор обрабатывающий ошибки выдаваемые классом доски в функции make_move
 
 Board - сам класс доски"""
+# не корректно работает шах - написать тесты и исправить
 
 from const import WHITE, BLACK
 from Figure import Bishop, King, Knight, Pawn, Figure, Queen, Rook, copy
@@ -53,6 +54,7 @@ class Board:
         self.color = WHITE
         self.mate = False
         self.stalemate = False
+        self.count_make_move = 0
 
         self.board = [[None] * count_col for _ in range(count_row)]
         if arrange_figure:
@@ -113,6 +115,7 @@ class Board:
 
         self._ald_board = self.board
         cor, new_cor, transformation_figure = chess_math(stra) if (type(stra) is str) else stra
+        self._kings_is_alive()
         self._check_cords(cor, new_cor)
         self._check_piece(cor, new_cor)
         self._move_piece(*cor, *new_cor)
@@ -142,6 +145,56 @@ class Board:
                     if (color is None) or (j is not None and color == j.color):
                         rez.append(j)
         return rez
+
+    def set_count_col(self, new_count_col, cut_right=True):
+        for i in range(self.count_row):
+            if self.count_col > new_count_col:
+                self.board[i] = self.board[i][:new_count_col] if cut_right else self.board[i][-new_count_col:]
+            else:
+                self.board[i] += [None] * (new_count_col - self.count_col)
+
+        self.count_col = new_count_col
+
+    def set_count_row(self, new_count_row, cut_top=True):
+        if self.count_row > new_count_row:
+            self.board = self.board[:new_count_row] if cut_top else self.board[-new_count_row:]
+        else:
+            for _ in range(new_count_row - self.count_row):
+                if cut_top:
+                    self.board.append([None] * self.count_col)
+                else:
+                    self.board.insert(0, [None] * self.count_col)
+
+        self.count_row = new_count_row
+
+    def add_top_row(self):
+        self.set_count_row(self.count_row + 1)
+
+    def subtract_top_row(self):
+        self.set_count_row(self.count_row - 1)
+
+    def add_down_row(self):
+        self.set_count_row(self.count_row + 1, cut_top=False)
+
+    def subtract_down_row(self):
+        self.set_count_row(self.count_row - 1, cut_top=False)
+
+    def add_right_col(self):
+        self.set_count_col(self.count_col + 1)
+
+    def subtract_right_col(self):
+        self.set_count_col(self.count_col - 1)
+
+    def add_left_col(self):
+        self.set_count_col(self.count_col + 1, cut_right=False)
+
+    def subtract_left_col(self):
+        self.set_count_col(self.count_col - 1, cut_right=False)
+
+    def _kings_is_alive(self):
+        if not (self.get_figure(King, 0) and self.get_figure(King, 1)):
+            self.mate = 1
+            raise IncorrectCoordinates('Король выпал или был съеден')
 
     @staticmethod
     def _read_move(cor, new_cor, transformation_figure):
@@ -220,6 +273,8 @@ class Board:
 
         if change_stroke:
             self.color = not self.color
+            self.count_make_move += 0.5
+
         self._transform_pawn(transformation_figure)
         if len(self.get_figure()) == 2:
             self.stalemate = True

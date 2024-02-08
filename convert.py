@@ -1,3 +1,5 @@
+# в будущем создать класс клетки (поля) для Board и переделать всю конвертацию туда
+# is None переписать на piece.is_empty и возможно разделить логику на "в доске" и "вне доски"
 from Figure import *
 from const import *
 
@@ -32,8 +34,8 @@ def math_chess_cor(cor: int):
     return chr(cor + ord('a'))
 
 
-def visual_chess(cor):
-    return 7 - (cor[1] - left) // cell_size, \
+def visual_chess(cor, count_col_chess):
+    return count_col_chess - 1 - (cor[1] - left) // cell_size, \
            (cor[0] - top) // cell_size
 
 
@@ -47,12 +49,12 @@ def visual_little_visual(cor):
            (cor[1] - top) // cell_size
 
 
-def chess_little_visual(cor):
-    return 7 - cor[1], cor[0]
+def chess_little_visual(cor, count_row_chess):
+    return count_row_chess - 1 - cor[1], cor[0]
 
 
-def little_visual_chess(cor):
-    return 7 - cor[1], cor[0]
+def little_visual_chess(cor, count_col_chess):
+    return count_col_chess - cor[1] - 1, cor[0]
 
 
 def little_visual_visual(cor):
