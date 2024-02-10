@@ -1,5 +1,6 @@
 import pygame
 import os
+from Square import OrdinarySquare
 
 pygame.init()
 
@@ -21,11 +22,11 @@ def load_image(name, color_key=None):
 
 WHITE = 1
 BLACK = 0
+reference_square = OrdinarySquare()
 
 instability = 5
 
 size = width, height = 800, 800
-cell_size = 100
 left = 0
 top = 0
 

@@ -19,7 +19,7 @@ Queen - класс Королевы,
 King - класс Короля."""
 
 import pygame.transform
-from const import load_image, cell_size, WHITE
+from const import load_image, WHITE, reference_square
 
 
 def can_move_parent(can_move):
@@ -142,7 +142,7 @@ class Figure:
                                       subsurface(200 * (self.get_pos_img_in_sp() - 1),
                                                  200 * int(not self.color),
                                                  200, 200),
-                                      (cell_size, cell_size))
+                                      reference_square.size)
 
     @staticmethod
     def get_pos_img_in_sp() -> int:

@@ -93,11 +93,10 @@ class Board:
             self.board[i[0]][6] = Knight(i[0], 6, i[1])
             self.board[i[0]][7] = Rook(i[0], 7, i[1])
 
-    @staticmethod
-    def correct_coordinates(row: int, col: int) -> bool:
+    def correct_coordinates(self, row: int, col: int) -> bool:
         """Функция проверяет, что координаты (row, col) лежат
         внутри доски."""
-        return 0 <= row < 8 and 0 <= col < 8
+        return 0 <= row < self.count_row and 0 <= col < self.count_col
 
     def make_moves(self, stra: str | tuple | list) -> None:
         """Проиграть партию до определённого момента."""
@@ -119,7 +118,7 @@ class Board:
         self._check_cords(cor, new_cor)
         self._check_piece(cor, new_cor)
         self._move_piece(*cor, *new_cor)
-        self._chess_check()
+        # self._chess_check()
         self._update(transformation_figure=transformation_figure)
 
     def is_under_attack(self, figure: Figure):

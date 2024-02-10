@@ -15,7 +15,7 @@ FPS - количество кадров в секунду."""
 import pygame
 
 from Game.Game import Game, check_end_game
-from const import size, cell_size, clock, FPS, instability
+from const import size, reference_square, clock, FPS, instability
 from random import choice
 import convert
 
@@ -33,6 +33,7 @@ class VisualGame(Game):
         self._screen = pygame.display.set_mode(size, pygame.RESIZABLE)
 
         self._selected_square = (-1, -1)
+
         self.sp_unstable_event = [
             self._board.add_right_col,
             self._board.add_left_col,
@@ -67,9 +68,16 @@ class VisualGame(Game):
             self._selected_square = pos
         else:
             self._board.make_move((self._selected_square, pos, None))
-            if self._board.count_make_move % instability == 0:
-                self.start_unstable_event()
+            self.unstable_event_handling()
             self._selected_square = (-1, -1)
+
+    def unstable_event_handling(self):
+        if self._board.count_make_move % instability == 0:
+            self.start_unstable_event()
+
+        reference_square.set_size(
+            min(self._screen.get_size()) //
+            max(self._board.count_col, self._board.count_row))
 
     def start_unstable_event(self):
         choice(self.sp_unstable_event)()
@@ -88,11 +96,11 @@ class VisualGame(Game):
         color = [200, 200, 200] if (i % 2 == j % 2) else [100, 100, 100]
         if self._selected_square == convert.little_visual_chess((i, j), self._board.count_row):
             color[2] += 50
-        self._screen.fill(color, (*convert.little_visual_visual((i, j)), cell_size, cell_size))
+        self._screen.fill(color, (*convert.little_visual_visual((i, j)), *reference_square.size))
 
     def draw_figure(self, i: int, j: int) -> None:
         """Нарисуй фигуру стоящую по координатам (от 1 до 8) i-той строки, j-того столбца."""
         # хорошо б сделать проверку на дурака
         i_chess, j_chess = convert.little_visual_chess((i, j), self._board.count_row)
         if (figure := self._board.board[i_chess][j_chess]) is not None:
-            self._screen.blit(figure.get_img(), convert.little_visual_visual((i, j)))
+            self._screen.blit(figure.get_img(), convert.little_visual_visual((i, j)))  # изменить размеры клетки

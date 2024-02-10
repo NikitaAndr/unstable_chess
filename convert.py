@@ -3,7 +3,6 @@
 from Figure import *
 from const import *
 
-
 sl = {'P': Pawn,
       'Q': Queen,
       'K': King,
@@ -35,22 +34,8 @@ def math_chess_cor(cor: int):
 
 
 def visual_chess(cor, count_col_chess):
-    return count_col_chess - 1 - (cor[1] - left) // cell_size, \
-           (cor[0] - top) // cell_size
-
-
-def chess_visual(cor):
-    return left + cell_size * cor[1], \
-           top + cell_size * cor[0]
-
-
-def visual_little_visual(cor):
-    return (cor[0] - left) // cell_size, \
-           (cor[1] - top) // cell_size
-
-
-def chess_little_visual(cor, count_row_chess):
-    return count_row_chess - 1 - cor[1], cor[0]
+    return (count_col_chess - (cor[1] // reference_square.size_x) - 1,
+            (cor[0] // reference_square.size_y))
 
 
 def little_visual_chess(cor, count_col_chess):
@@ -58,4 +43,5 @@ def little_visual_chess(cor, count_col_chess):
 
 
 def little_visual_visual(cor):
-    return cor[0] * cell_size + top, cor[1] * cell_size + left
+    return cor[0] * reference_square.size_y,\
+           cor[1] * reference_square.size_x
