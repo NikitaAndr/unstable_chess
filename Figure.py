@@ -24,6 +24,7 @@ from const import load_image, WHITE, reference_square
 
 def can_move_parent(can_move):
     def can_move_new(*args, **kwargs):
+        print(args[0].col, args[0].row, args[2:])
         if not Figure.can_move(*args, *kwargs):
             return False
 
@@ -107,7 +108,7 @@ class Figure:
     def __int__(self):
         return price_figure[self.char()]
 
-    def set_position(self, row: int, col: int):
+    def set_position(self, row: int, col: int, is_move=True):
         """Измени координаты фигуры на строку row и колонку col (не рекомендуется вылезать за доску)."""
         self.row = row
         self.col = col
@@ -164,6 +165,7 @@ class Pawn(Figure):
         self._first_move = row
         self._direction = 1 if self.color else -1
 
+    @can_move_parent
     def can_move(self, board: list, row: int, col: int) -> bool:
         move_place = board[row][col]
         if self.can_eat(move_place, row, col):
@@ -216,6 +218,7 @@ class Knight(Figure):
                 or (self.row - 2 == new_row and self.col + 1 == new_col)
                 or (self.row + 2 == new_row and self.col - 1 == new_col)
                 or (self.row - 2 == new_row and self.col - 1 == new_col)):
+            print(1)
             return True
         return False
 
@@ -266,9 +269,10 @@ class Rook(Figure):
         super(Rook, self).__init__(row, col, color)
         self.can_castle = True
 
-    def set_position(self, row: int, col: int) -> None:
-        super(Rook, self).set_position(row, col)
-        self.can_castle = False
+    def set_position(self, row: int, col: int, is_move=True) -> None:
+        super(Rook, self).set_position(row, col, is_move)
+        if is_move:
+            self.can_castle = False
 
     @can_move_parent
     def can_move(self, board: list, new_row: int, new_col: int) -> bool:
@@ -313,6 +317,7 @@ class Rook(Figure):
 class Queen(Figure):
     """Класс королевы (ферзя, визиря)."""
 
+    @can_move_parent
     def can_move(self, board: list, new_row: int, new_col: int) -> bool:
         if (self.can_move_row(board, new_row, new_col) or
                 self.can_move_col(board, new_row, new_col) or
@@ -381,9 +386,10 @@ class King(Figure):
         super(King, self).__init__(row, col, color)
         self.can_castle = True
 
-    def set_position(self, row: int, col: int):
-        super(King, self).set_position(row, col)
-        self.can_castle = False
+    def set_position(self, row: int, col: int, is_move=True):
+        super(King, self).set_position(row, col, is_move)
+        if is_move:
+            self.can_castle = False
 
     @can_move_parent
     def can_move(self, board: list, new_row: int, new_col: int) -> bool:

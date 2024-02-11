@@ -67,8 +67,8 @@ class VisualGame(Game):
         if self._selected_square == (-1, -1):
             self._selected_square = pos
         else:
-            self._board.make_move((self._selected_square, pos, None))
-            self.unstable_event_handling()
+            if self._board.make_move((self._selected_square, pos, None))[0]:
+                self.unstable_event_handling()
             self._selected_square = (-1, -1)
 
     def unstable_event_handling(self):

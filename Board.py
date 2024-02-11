@@ -145,13 +145,25 @@ class Board:
                         rez.append(j)
         return rez
 
+    def update_cor_shift_board(self, shift_row, shift_col):
+        for row in self.board:
+            for figure in row:
+                if issubclass(type(figure), Figure):
+                    figure.set_position(figure.row + shift_row, figure.col + shift_col, False)
+
     def set_count_col(self, new_count_col, cut_right=True):
         for i in range(self.count_row):
             if self.count_col > new_count_col:
                 self.board[i] = self.board[i][:new_count_col] if cut_right else self.board[i][-new_count_col:]
             else:
-                self.board[i] += [None] * (new_count_col - self.count_col)
+                for _ in range(new_count_col - self.count_col):
+                    if cut_right:
+                        self.board[i].append(None)
+                    else:
+                        self.board[i].insert(0, None)
 
+        if not cut_right:
+            self.update_cor_shift_board(0, new_count_col - self.count_col)
         self.count_col = new_count_col
 
     def set_count_row(self, new_count_row, cut_top=True):
@@ -164,6 +176,8 @@ class Board:
                 else:
                     self.board.insert(0, [None] * self.count_col)
 
+        if not cut_top:
+            self.update_cor_shift_board(new_count_row - self.count_row, 0)
         self.count_row = new_count_row
 
     def add_top_row(self):
