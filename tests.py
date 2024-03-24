@@ -1,8 +1,8 @@
 import unittest
 from parameterized import parameterized
 
-from Board import Board, IncorrectCoordinates
-from Figure import *
+from Objects.Board import Board
+from Objects.Figure import *
 
 
 class TestBoard(unittest.TestCase):

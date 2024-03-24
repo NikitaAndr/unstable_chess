@@ -24,7 +24,7 @@ WHITE = 1
 BLACK = 0
 reference_square = OrdinarySquare()
 
-instability = 5
+instability = 1
 
 size = width, height = 800, 800
 left = 0

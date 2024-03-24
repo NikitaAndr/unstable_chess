@@ -13,9 +13,11 @@ Board - сам класс доски"""
 # не корректно работает шах - написать тесты и исправить
 
 from const import WHITE, BLACK
-from Figure import Bishop, King, Knight, Pawn, Figure, Queen, Rook, copy
+from Objects.Figure import Bishop, King, Knight, Pawn, Figure, Queen, Rook, copy
+from Objects.Special_objects import FakeField, Pit
 from convert import chess_math, math_chess_cor
 from Errors import IncorrectCoordinates
+from random import randrange
 
 
 def try_error(make_move):
@@ -56,7 +58,7 @@ class Board:
         self.stalemate = False
         self.count_make_move = 0
 
-        self.board = [[None] * count_col for _ in range(count_row)]
+        self.board = [[None] * count_col for _ in range(count_row)]  # перевести в приватные
         if arrange_figure:
             self.arrange_pawns()
             self.arrange_senior_figures()
@@ -125,7 +127,7 @@ class Board:
         """Проверь, находится ли поле под атакой."""
         for i in range(len(self.board)):
             for j in range(len(self.board[0])):
-                if (self.board[i][j] is not None
+                if (issubclass(type(self.board[i][j]), Figure)
                         and self.board[i][j].color != figure.color
                         and self.board[i][j].can_move(self.board, figure.row, figure.col)):
                     return True
@@ -141,7 +143,7 @@ class Board:
         for i in self.board:
             for j in i:
                 if (cls is None) or isinstance(j, cls):
-                    if (color is None) or (j is not None and color == j.color):
+                    if (color is None) or (issubclass(type(j), Figure) and color == j.color):
                         rez.append(j)
         return rez
 
@@ -204,6 +206,11 @@ class Board:
     def subtract_left_col(self):
         self.set_count_col(self.count_col - 1, cut_right=False)
 
+    def dig_hole(self, row=-1, col=-1):
+        row = row if row != -1 else randrange(0, self.count_row)
+        col = col if col != -1 else randrange(0, self.count_col)
+        self.board[row][col] = Pit(row, col)
+
     def _kings_is_alive(self):
         if not (self.get_figure(King, 0) and self.get_figure(King, 1)):
             self.mate = 1
@@ -225,7 +232,7 @@ class Board:
 
     def _check_piece(self, cor: tuple[int, int], new_cor: tuple[int, int]) -> None:
         """Проверка, может ли фигура по выбранным координатам сходить на новые."""
-        if (piece := self.board[cor[0]][cor[1]]) is None:
+        if not(issubclass(type(piece := self.board[cor[0]][cor[1]]), Figure)):
             raise IncorrectCoordinates('Вы берёте не существующую фигуру')
         if not self.is_current_player(piece.get_color()):
             raise IncorrectCoordinates('Вы не можете взять фигуру другого игрока')
@@ -268,8 +275,9 @@ class Board:
         """Двинь фигуру с координат row, col на row1, col1 БЕЗ ПРОВЕРОК."""
         piece = self.board[row][col]
         self.board[row][col] = None
-        self.board[row1][col1] = piece
-        piece.set_position(row1, col1)
+        if not isinstance(self.board[row1][col1], FakeField):
+            self.board[row1][col1] = piece
+        piece.set_position(row1, col1)  # возможна ошибка, если была взята не фигура
         # можно вставить функцию для уязвимого хвоста пешки во время большого хода
 
     def _chess_check(self):

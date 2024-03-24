@@ -43,6 +43,7 @@ class VisualGame(Game):
             self._board.subtract_top_row,
             self._board.subtract_right_col,
             self._board.subtract_left_col,
+            self._board.dig_hole
         ]
 
     @check_end_game

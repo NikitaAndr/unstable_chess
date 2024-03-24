@@ -19,12 +19,14 @@ Queen - класс Королевы,
 King - класс Короля."""
 
 import pygame.transform
+
+import Objects.class_hess_object
 from const import load_image, WHITE, reference_square
+from Objects.class_hess_object import ChessObject
 
 
 def can_move_parent(can_move):
     def can_move_new(*args, **kwargs):
-        print(args[0].col, args[0].row, args[2:])
         if not Figure.can_move(*args, *kwargs):
             return False
 
@@ -33,7 +35,7 @@ def can_move_parent(can_move):
     return can_move_new
 
 
-class Figure:
+class Figure(ChessObject):
     """Класс-родитель (интерфейс, абстрактный класс) фигур."""
 
     def __init__(self, row: int, col: int, color: bool) -> None:
@@ -43,8 +45,7 @@ class Figure:
         row - строка, где сейчас стоит фигура
         col - колонка, где сейчас стоит фигура
         color - цвет фигуры."""
-        self.row = row
-        self.col = col
+        super(Figure, self).__init__(row, col)
         self.color = color
 
     def __str__(self) -> str:
@@ -121,7 +122,11 @@ class Figure:
         """Проверь, вот эта (figure) фигура для меня враг?"""
         if figure is None:
             return False
-        return figure.get_color() != self.get_color()
+        if issubclass(type(figure), Figure):
+            return figure.get_color() != self.get_color()
+        if issubclass(type(figure), Objects.class_hess_object.ChessObject):
+            return figure.is_eaten_figure
+        raise TypeError("Объект не должен находиться на доске")
 
     def can_move(self, board: list, new_row: int, new_col: int) -> bool:
         """Проверь, могу ли я сходить на поле по координатам row, col доски board."""
@@ -133,7 +138,8 @@ class Figure:
         """Проверь, свободен ли путь для хода на координаты new_row, new_col доски board."""
         return True
 
-    def char(self) -> str:
+    @staticmethod
+    def char() -> str:
         """Дай буквенное представление."""
         return "F"
 
@@ -218,7 +224,6 @@ class Knight(Figure):
                 or (self.row - 2 == new_row and self.col + 1 == new_col)
                 or (self.row + 2 == new_row and self.col - 1 == new_col)
                 or (self.row - 2 == new_row and self.col - 1 == new_col)):
-            print(1)
             return True
         return False
 

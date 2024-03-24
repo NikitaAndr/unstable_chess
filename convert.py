@@ -1,6 +1,6 @@
 # в будущем создать класс клетки (поля) для Board и переделать всю конвертацию туда
 # is None переписать на piece.is_empty и возможно разделить логику на "в доске" и "вне доски"
-from Figure import *
+from Objects.Figure import *
 from const import *
 
 sl = {'P': Pawn,

@@ -12,7 +12,7 @@ Board - доска, которую отображает класс Game.
 """
 
 import json
-from Board import Board
+from Objects.Board import Board
 
 
 def check_end_game(start):
